@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Оболочка — прототип</title>
+<style>
+  :root{
+    --bg-0:#1c2024;
+    --bg-1:#22262b;
+    --steel-a:#2b3036;
+    --steel-b:#1a1d21;
+    --surface:#2a2f35;
+    --surface-raised:#33393f;
+    --border:#3c434b;
+    --text-main:#e8eaed;
+    --text-secondary:#9aa2ab;
+    --text-faint:#6b7278;
+    --accent:#6f93b8;
+    --accent-soft:rgba(111,147,184,0.18);
+    --danger:#c56a5e;
+    --radius:14px;
+    --radius-sm:9px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(ellipse at 30% 0%, rgba(255,255,255,0.03), transparent 60%),
+      repeating-linear-gradient(115deg, var(--steel-a) 0px, var(--steel-a) 2px, var(--steel-b) 3px, var(--steel-a) 5px),
+      var(--bg-0);
+    color:var(--text-main);
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    max-width:520px;
+    margin:0 auto;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+
+  /* верхняя панель */
+  header{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    background:rgba(28,32,36,0.72);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .brand{
+    font-size:15px;
+    letter-spacing:0.02em;
+    color:var(--text-secondary);
+    font-weight:600;
+  }
+  .icon-btn{
+    width:38px;height:38px;
+    border-radius:11px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text-main);
+    display:flex;align-items:center;justify-content:center;
+    font-size:17px;
+    cursor:pointer;
+    transition:background .15s, transform .1s, border-color .15s;
+  }
+  .icon-btn:active{transform:scale(0.92);}
+  .icon-btn.active{
+    background:var(--accent-soft);
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .icon-group{display:flex; gap:8px;}
+
+  /* рабочая область */
+  main{
+    flex:1 1 auto;
+    overflow-y:auto;
+    padding:18px 16px 100px;
+  }
+  .empty-state{
+    display:flex;flex-direction:column;align-items:center;
+    text-align:center;
+    padding:80px 24px 0;
+    color:var(--text-secondary);
+  }
+  .empty-state .glyph{font-size:44px;opacity:.5;margin-bottom:14px;}
+  .empty-state h3{margin:0 0 6px;color:var(--text-main);font-weight:600;font-size:17px;}
+  .empty-state p{margin:0;font-size:14px;line-height:1.5;max-width:280px;}
+
+  .category-block{margin-bottom:28px;}
+  .category-title{
+    display:flex;align-items:center;gap:8px;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--text-faint);
+    margin:0 2px 10px;
+  }
+  .category-title .glyph{font-size:15px;filter:grayscale(1) contrast(1.05);}
+  .category-title .icon-img{width:20px;height:20px;border-radius:5px;object-fit:cover;}
+
+  .grid{display:grid; gap:10px;}
+  .grid.size-lg{grid-template-columns:1fr;}
+  .grid.size-md{grid-template-columns:1fr 1fr;}
+  .grid.size-sm{grid-template-columns:1fr 1fr 1fr;}
+  .grid.size-list{grid-template-columns:1fr; gap:6px;}
+
+  .card{
+    position:relative;
+    background:linear-gradient(160deg, var(--surface-raised), var(--surface));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px 14px;
+    display:flex;flex-direction:column;align-items:center;
+    text-align:center;
+    gap:10px;
+    cursor:pointer;
+    transition:transform .12s, border-color .12s;
+  }
+  .card:active{transform:scale(0.97);}
+  .card .glyph{
+    font-size:40px;
+    filter:grayscale(1) contrast(1.05);
+    opacity:0.92;
+  }
+  .card .icon-img{
+    width:64px;height:64px;
+    border-radius:12px;
+    object-fit:cover;
+  }
+  .card .name{font-size:14px;font-weight:500;line-height:1.3;}
+
+  .grid.size-md .card .glyph{font-size:32px;}
+  .grid.size-md .card .icon-img{width:48px;height:48px;border-radius:10px;}
+  .grid.size-md .card .name{font-size:13px;}
+
+  .grid.size-sm .card{padding:10px 6px;gap:6px;}
+  .grid.size-sm .card .glyph{font-size:24px;}
+  .grid.size-sm .card .icon-img{width:34px;height:34px;border-radius:8px;}
+  .grid.size-sm .card .name{font-size:11px;}
+
+  .grid.size-list .card{
+    flex-direction:row;
+    text-align:left;
+    padding:10px 12px;
+    gap:12px;
+    border-radius:var(--radius-sm);
+  }
+  .grid.size-list .card .glyph{font-size:22px;}
+  .grid.size-list .card .icon-img{width:34px;height:34px;border-radius:8px;flex-shrink:0;}
+  .grid.size-list .card .name{font-size:13.5px;}
+
+  /* режим выбора */
+  .checkbox{
+    position:absolute;
+    top:8px; right:8px;
+    width:22px;height:22px;
+    border-radius:50%;
+    border:1.5px solid var(--text-secondary);
+    background:rgba(0,0,0,0.25);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;
+    color:transparent;
+  }
+  .grid.size-list .checkbox{position:static; margin-left:auto;}
+  .card.selected .checkbox{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+  .card.selected{border-color:var(--accent);}
+
+  /* нижняя панель */
+  nav{
+    position:fixed;
+    bottom:0;left:0;right:0;
+    max-width:520px;
+    margin:0 auto;
+    display:flex;
+    background:rgba(28,32,36,0.85);
+    backdrop-filter:blur(10px);
+    border-top:1px solid rgba(255,255,255,0.05);
+    z-index:20;
+  }
+  .nav-btn{
+    flex:1;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:10px 0 12px;
+    color:var(--text-faint);
+    font-size:11px;
+    cursor:pointer;
+    background:none;border:none;
+  }
+  .nav-btn .ic{font-size:20px;}
+  .nav-btn.active{color:var(--text-main);}
+  .nav-underline{
+    position:absolute;
+    bottom:6px;
+    width:26px;height:2px;
+    background:var(--text-main);
+    border-radius:2px;
+    left:50%;transform:translateX(-50%);
+  }
+  .nav-btn{position:relative;}
+
+  /* нижняя кнопка удаления в режиме выбора */
+  .delete-bar{
+    position:fixed;
+    bottom:0;left:0;right:0;
+    max-width:520px;margin:0 auto;
+    background:rgba(28,32,36,0.92);
+    backdrop-filter:blur(10px);
+    border-top:1px solid rgba(255,255,255,0.05);
+    display:none;
+    align-items:center;justify-content:space-between;
+    padding:14px 18px;
+    z-index:25;
+  }
+  .delete-bar.show{display:flex;}
+  .delete-bar .count{font-size:13px;color:var(--text-secondary);}
+  .trash-btn{
+    display:flex;align-items:center;gap:8px;
+    background:var(--danger);
+    color:#fff;
+    border:none;
+    padding:10px 18px;
+    border-radius:11px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .trash-btn:disabled{opacity:0.35;cursor:default;}
+
+  /* экран базы */
+  #baseView{
+    position:fixed;inset:0;
+    max-width:520px;margin:0 auto;
+    background:var(--bg-0);
+    display:none;
+    flex-direction:column;
+    z-index:30;
+  }
+  #baseView.show{display:flex;}
+
+  #settingsView{
+    position:fixed;inset:0;
+    max-width:520px;margin:0 auto;
+    background:var(--bg-0);
+    display:none;
+    flex-direction:column;
+    z-index:30;
+  }
+  #settingsView.show{display:flex;}
+
+  #cardDetailView, #testView{
+    position:fixed;inset:0;
+    max-width:520px;margin:0 auto;
+    background:var(--bg-0);
+    display:none;
+    flex-direction:column;
+    z-index:35;
+  }
+  #cardDetailView.show, #testView.show{display:flex;}
+
+  /* блоки содержимого карточки */
+  .block{margin-bottom:18px;}
+  .block-gallery{
+    display:flex; gap:10px; overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    margin:0 -16px 18px; padding:0 16px;
+  }
+  .block-gallery img{
+    scroll-snap-align:start;
+    width:80%; max-width:320px; flex-shrink:0;
+    border-radius:var(--radius); object-fit:cover;
+    border:1px solid var(--border);
+    aspect-ratio:4/3;
+  }
+  .block-text{font-size:14.5px;line-height:1.6;color:var(--text-main);}
+  .block-table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-sm);}
+  .block-table{border-collapse:collapse; width:100%; font-size:13px;}
+  .block-table th, .block-table td{
+    padding:9px 12px; text-align:left;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  .block-table th{color:var(--text-secondary); font-weight:600; background:var(--surface);}
+  .block-table tr:last-child td{border-bottom:none;}
+  .block-action{
+    display:flex;align-items:center;gap:10px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:13px 14px;
+    cursor:pointer;
+    font-size:14px;
+    text-decoration:none;
+    color:var(--text-main);
+  }
+  .block-action .ic{font-size:18px;}
+  .block-action .sub{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+
+  /* тесты внутри базы: список тестов */
+  .test-entry{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:14px; margin-bottom:8px;
+    cursor:pointer;
+  }
+  .test-entry .t1{font-size:14px;font-weight:500;}
+  .test-entry .t2{font-size:12px;color:var(--text-secondary);margin-top:3px;}
+  .test-entry .arrow{color:var(--text-faint);}
+
+  /* прохождение теста */
+  .test-progress{font-size:12px;color:var(--text-secondary);margin-bottom:10px;}
+  .test-question-img{width:100%;border-radius:var(--radius);margin-bottom:14px;border:1px solid var(--border);}
+  .test-question-text{font-size:16px;font-weight:600;line-height:1.4;margin-bottom:16px;}
+  .test-option{
+    display:block;width:100%;text-align:left;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:13px 14px;
+    margin-bottom:9px;
+    font-size:14px;
+    color:var(--text-main);
+    cursor:pointer;
+  }
+  .test-option.correct{border-color:#5f9e6f; background:rgba(95,158,111,0.15); color:#a9d6b3;}
+  .test-option.wrong{border-color:var(--danger); background:rgba(197,106,94,0.15); color:#e3a89f;}
+  .test-option:disabled{cursor:default;}
+  .test-explanation{
+    font-size:13px; color:var(--text-secondary);
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:12px 14px; margin:6px 0 16px;
+  }
+  .test-next-btn{
+    width:100%; padding:13px; border:none; border-radius:var(--radius-sm);
+    background:var(--accent); color:#fff; font-size:14.5px; font-weight:600;
+    cursor:pointer;
+  }
+  .test-next-btn:disabled{opacity:0.35;cursor:default;}
+  .test-result{text-align:center;padding:40px 10px 0;}
+  .test-result .score{font-size:44px;font-weight:700;margin:10px 0 4px;}
+  .test-result .label{color:var(--text-secondary);font-size:14px;margin-bottom:24px;}
+  .test-result-btn{
+    display:block; width:100%; padding:13px; margin-bottom:10px;
+    border-radius:var(--radius-sm); border:1px solid var(--border);
+    background:var(--surface); color:var(--text-main); font-size:14px; cursor:pointer;
+  }
+  .settings-group{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .settings-title{
+    font-size:12px;text-transform:uppercase;letter-spacing:0.06em;
+    color:var(--text-faint);
+    margin-bottom:10px;
+  }
+  .settings-row{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:14px;
+    padding:6px 0;
+  }
+  .settings-value{color:var(--text-secondary);}
+  .settings-hint{
+    font-size:12.5px;color:var(--text-secondary);
+    line-height:1.5;
+    margin-bottom:10px;
+  }
+  .settings-btn{
+    width:100%;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:var(--surface-raised);
+    border:1px solid var(--border);
+    color:var(--text-main);
+    padding:12px;
+    border-radius:var(--radius-sm);
+    font-size:14px;
+    cursor:pointer;
+    margin-bottom:8px;
+  }
+  .settings-btn:active{transform:scale(0.98);}
+  .settings-btn:last-child{margin-bottom:0;}
+  .lang-btn.active{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .base-header{
+    display:flex;align-items:center;gap:12px;
+    padding:16px 16px;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .back-btn{
+    width:36px;height:36px;border-radius:10px;
+    background:var(--surface);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--text-main);
+  }
+  .base-header h2{margin:0;font-size:16px;font-weight:600;}
+  .base-list{flex:1;overflow-y:auto;padding:14px 16px 40px;}
+  .entry{
+    display:flex;align-items:center;gap:12px;
+    padding:14px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    margin-bottom:8px;
+  }
+  .entry .glyph{font-size:22px;}
+  .entry .icon-img{width:32px;height:32px;border-radius:8px;flex-shrink:0;}
+  .entry .txt{flex:1;}
+  .entry .txt .t1{font-size:14px;font-weight:500;}
+  .entry .txt .t2{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+  .star{
+    background:none;border:none;font-size:19px;cursor:pointer;
+    color:var(--text-faint);
+  }
+  .star.on{color:#e0b95c;}
+
+  input[type=file]{display:none;}
+
+  .toast{
+    position:fixed;
+    bottom:90px;left:50%;
+    transform:translateX(-50%);
+    background:var(--surface-raised);
+    border:1px solid var(--border);
+    padding:10px 16px;
+    border-radius:10px;
+    font-size:13px;
+    opacity:0;
+    transition:opacity .25s;
+    pointer-events:none;
+    z-index:50;
+    max-width:80%;
+    text-align:center;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="brand">Оболочка</div>
+    <div class="icon-group">
+      <button class="icon-btn" id="btnSettings" title="Настройки">⚙</button>
+      <button class="icon-btn" id="btnAdd" title="Добавить базу">＋</button>
+      <button class="icon-btn" id="btnSelect" title="Выбрать базы для удаления">☑</button>
+    </div>
+  </header>
+
+  <main id="main"></main>
+
+  <div class="delete-bar" id="deleteBar">
+    <div class="count" id="deleteCount">0</div>
+    <button class="trash-btn" id="btnTrash" disabled>🗑 Удалить</button>
+  </div>
+
+  <nav id="nav">
+    <button class="nav-btn active" data-tab="home"><span class="ic">🏠</span><span class="nav-label" id="navHomeLabel">Home</span></button>
+    <button class="nav-btn" data-tab="fav"><span class="ic">❤</span><span class="nav-label" id="navFavLabel">Favorites</span></button>
+  </nav>
+
+  <div id="baseView">
+    <div class="base-header">
+      <button class="back-btn" id="btnBack">←</button>
+      <h2 id="baseViewTitle">База</h2>
+    </div>
+    <div class="base-list" id="baseList"></div>
+  </div>
+
+  <div id="settingsView">
+    <div class="base-header">
+      <button class="back-btn" id="btnSettingsBack">←</button>
+      <h2 id="settingsTitleText">Settings</h2>
+    </div>
+    <div class="base-list">
+      <div class="settings-group">
+        <div class="settings-title" id="langSectionTitle">Interface language</div>
+        <button class="settings-btn lang-btn" data-lang="en">English</button>
+        <button class="settings-btn lang-btn" data-lang="ru">Русский</button>
+        <button class="settings-btn lang-btn" data-lang="es">Español</button>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-title" id="licenseSectionTitle">License management</div>
+        <div class="settings-hint" id="licenseHintText">Will be available once the sales website launches.</div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-title" id="aboutSectionTitle">About</div>
+        <div class="settings-row"><span id="aboutShellLabel">Shell</span><span class="settings-value" id="aboutShellValue">working prototype</span></div>
+        <div class="settings-row"><span id="aboutCountLabel">Connected databases</span><span class="settings-value" id="settingsBaseCount">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="cardDetailView">
+    <div class="base-header">
+      <button class="back-btn" id="btnCardBack">←</button>
+      <h2 id="cardDetailTitle">Карточка</h2>
+      <button class="star" id="cardDetailStar" style="margin-left:auto;font-size:22px;">☆</button>
+    </div>
+    <div class="base-list" id="cardDetailBody"></div>
+  </div>
+
+  <div id="testView">
+    <div class="base-header">
+      <button class="back-btn" id="btnTestBack">←</button>
+      <h2 id="testViewTitle">Тест</h2>
+    </div>
+    <div class="base-list" id="testBody"></div>
+  </div>
+
+  <input type="file" id="fileInput" accept="application/json">
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ---------- локализация оболочки: 3 языка, по умолчанию английский ---------- */
+const STRINGS = {
+  en: {
+    pageTitle:"Shell — prototype",
+    tipSettings:"Settings", tipAdd:"Add database", tipSelect:"Select databases to delete",
+    brand:"Shell",
+    navHome:"Home", navFav:"Favorites",
+    emptyHomeTitle:"No databases yet", emptyHomeText:"Tap “+” above to add your first database.",
+    emptyFavTitle:"No favorites yet", emptyFavText:"Mark cards with a star inside a database — they'll show up here.",
+    favSectionTitle:"Favorite entries",
+    selected:"Selected", delete:"Delete",
+    settingsTitle:"Settings",
+    langSectionTitle:"Interface language",
+    licenseSectionTitle:"License management",
+    licenseHint:"Will be available once the sales website launches — that's also where you'll link purchased databases to this device.",
+    aboutSectionTitle:"About", aboutShell:"Shell", aboutShellValue:"working prototype", aboutCount:"Connected databases",
+    noTestsYet:"This database has no tests yet.",
+    questionsCount:(n)=>`${n} question${n===1?'':'s'}`,
+    questionOf:(i,n)=>`Question ${i} of ${n}`,
+    next:"Next", showResult:"Show result",
+    correctAnswers:"correct answers",
+    retryTest:"Retake test", backToTests:"Back to tests",
+    call:"Call", openMap:"Open on map",
+    toastBadFormat:"This file doesn't match the database format",
+    toastNeedTests:"A “Tests” database must contain a list of tests",
+    toastNeedCards:"This database must contain a list of cards",
+    toastAdded:(name)=>`Database "${name}" added`,
+    toastReadFail:"Couldn't read the database file",
+    confirmDelete:(n)=>`Delete the selected databases (${n})? This can't be undone.`,
+  },
+  ru: {
+    pageTitle:"Оболочка — прототип",
+    tipSettings:"Настройки", tipAdd:"Добавить базу", tipSelect:"Выбрать базы для удаления",
+    brand:"Оболочка",
+    navHome:"Главная", navFav:"Избранное",
+    emptyHomeTitle:"Баз данных нет", emptyHomeText:"Нажмите «＋» вверху, чтобы добавить первую базу.",
+    emptyFavTitle:"Пока нет избранного", emptyFavText:"Отмечайте карточки звёздочкой внутри баз — они появятся здесь.",
+    favSectionTitle:"Избранные записи",
+    selected:"Выбрано", delete:"Удалить",
+    settingsTitle:"Настройки",
+    langSectionTitle:"Язык интерфейса",
+    licenseSectionTitle:"Управление лицензиями",
+    licenseHint:"Появится после запуска сайта продажи баз данных — там же можно будет привязать купленные базы к этому устройству.",
+    aboutSectionTitle:"О приложении", aboutShell:"Оболочка", aboutShellValue:"рабочий прототип", aboutCount:"Подключено баз",
+    noTestsYet:"В этой базе пока нет тестов.",
+    questionsCount:(n)=>`${n} вопрос${n%10===1&&n%100!==11?'':(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'а':'ов')}`,
+    questionOf:(i,n)=>`Вопрос ${i} из ${n}`,
+    next:"Далее", showResult:"Показать результат",
+    correctAnswers:"правильных ответов",
+    retryTest:"Пройти заново", backToTests:"Назад к тестам",
+    call:"Позвонить", openMap:"Открыть на карте",
+    toastBadFormat:"Файл не соответствует формату базы",
+    toastNeedTests:"В базе категории «Тесты» должен быть список тестов",
+    toastNeedCards:"В базе должен быть список карточек",
+    toastAdded:(name)=>`База «${name}» добавлена`,
+    toastReadFail:"Не удалось прочитать файл базы",
+    confirmDelete:(n)=>`Удалить выбранные базы (${n})? Действие необратимо.`,
+  },
+  es: {
+    pageTitle:"Aplicación — prototipo",
+    tipSettings:"Ajustes", tipAdd:"Añadir base de datos", tipSelect:"Seleccionar bases para eliminar",
+    brand:"Aplicación",
+    navHome:"Inicio", navFav:"Favoritos",
+    emptyHomeTitle:"Aún no hay bases de datos", emptyHomeText:"Toca «＋» arriba para añadir tu primera base de datos.",
+    emptyFavTitle:"Aún no hay favoritos", emptyFavText:"Marca las tarjetas con una estrella dentro de una base — aparecerán aquí.",
+    favSectionTitle:"Elementos favoritos",
+    selected:"Seleccionadas", delete:"Eliminar",
+    settingsTitle:"Ajustes",
+    langSectionTitle:"Idioma de la interfaz",
+    licenseSectionTitle:"Gestión de licencias",
+    licenseHint:"Estará disponible cuando se lance el sitio de ventas — allí también podrás vincular las bases compradas a este dispositivo.",
+    aboutSectionTitle:"Acerca de", aboutShell:"Aplicación", aboutShellValue:"prototipo funcional", aboutCount:"Bases conectadas",
+    noTestsYet:"Esta base todavía no tiene tests.",
+    questionsCount:(n)=>`${n} pregunta${n===1?'':'s'}`,
+    questionOf:(i,n)=>`Pregunta ${i} de ${n}`,
+    next:"Siguiente", showResult:"Ver resultado",
+    correctAnswers:"respuestas correctas",
+    retryTest:"Repetir test", backToTests:"Volver a los tests",
+    call:"Llamar", openMap:"Abrir en el mapa",
+    toastBadFormat:"Este archivo no corresponde al formato de base de datos",
+    toastNeedTests:"Una base de «Tests» debe contener una lista de tests",
+    toastNeedCards:"Esta base debe contener una lista de tarjetas",
+    toastAdded:(name)=>`Base «${name}» añadida`,
+    toastReadFail:"No se pudo leer el archivo de la base",
+    confirmDelete:(n)=>`¿Eliminar las bases seleccionadas (${n})? Esta acción no se puede deshacer.`,
+  },
+};
+let currentLang = "en"; // язык по умолчанию — английский (см. чек-лист, пункт 14)
+function t(key, ...args){
+  const dict = STRINGS[currentLang] || STRINGS.en;
+  const val = dict[key] !== undefined ? dict[key] : STRINGS.en[key];
+  return typeof val === "function" ? val(...args) : val;
+}
+// Достаёт локализованное значение поля базы: поддерживает как обычную строку
+// (обратная совместимость), так и объект {en, ru, es} с переводами.
+function loc(field){
+  if(field == null) return "";
+  if(typeof field === "string") return field;
+  return field[currentLang] || field.en || field.ru || field.es || "";
+}
+
+/* ---------- справочник категорий (10 шт., см. Том 3 / Картинки.pdf) ---------- */
+const CATEGORY_ORDER = ["recipes","places","documents","tools","dictionary","tests","routes","gallery","contacts","checklists"];
+const CATEGORY_FALLBACK_TITLE = {
+  en: { recipes:"Recipes", places:"Nature / places", documents:"Documents", tools:"Tools",
+        dictionary:"Dictionary", tests:"Tests / quizzes", routes:"Routes", gallery:"Gallery",
+        contacts:"Contacts", checklists:"Checklists" },
+  ru: { recipes:"Рецепты", places:"Природа / места", documents:"Документы", tools:"Инструменты",
+        dictionary:"Словарь", tests:"Тесты / викторины", routes:"Маршруты", gallery:"Галерея",
+        contacts:"Контакты", checklists:"Чек-листы" },
+  es: { recipes:"Recetas", places:"Naturaleza / lugares", documents:"Documentos", tools:"Herramientas",
+        dictionary:"Diccionario", tests:"Tests / cuestionarios", routes:"Rutas", gallery:"Galería",
+        contacts:"Contactos", checklists:"Listas de verificación" },
+};
+// Иконка и название категории теперь хранятся ВНУТРИ каждой базы (base.icon, base.categoryTitle)
+// и физически копируются в файл базы при её создании — оболочка ничего не хранит заранее
+// (см. чек-лист, пункт 13). CATEGORY_ORDER задаёт только порядок блоков на главном экране,
+// CATEGORY_FALLBACK_TITLE используется, только если в самой базе название категории не указано.
+
+/* ---------- начальное состояние: без предзагруженных баз ---------- */
+function seedBases(){
+  return [];
+}
+
+/* ---------- состояние ---------- */
+let bases = [];
+let selectMode = false;
+let selected = new Set();
+let currentTab = "home";
+let openBaseId = null;
+
+/* ---------- хранилище (персистентно, без localStorage) ---------- */
+/* ---------- хранилище: window.storage (внутри Claude) с запасным вариантом
+   localStorage (когда файл открыт как обычная страница на устройстве) ---------- */
+const hasClaudeStorage = (typeof window.storage !== "undefined" && window.storage !== null);
+
+async function storageGet(key){
+  if(hasClaudeStorage){
+    try{ const r = await window.storage.get(key, false); return r ? r.value : null; }
+    catch(e){ return null; }
+  }
+  return localStorage.getItem(key);
+}
+async function storageSet(key, value){
+  if(hasClaudeStorage){
+    try{ await window.storage.set(key, value, false); return; }catch(e){}
+  }
+  try{ localStorage.setItem(key, value); }catch(e){}
+}
+
+async function loadState(){
+  const raw = await storageGet("bases");
+  bases = raw ? JSON.parse(raw) : seedBases();
+  if(!bases) bases = [];
+  await saveState();
+
+  const savedLang = await storageGet("lang");
+  if(savedLang && STRINGS[savedLang]) currentLang = savedLang;
+}
+async function saveState(){
+  await storageSet("bases", JSON.stringify(bases));
+}
+
+/* ---------- рендер главного экрана ---------- */
+function render(){
+  const main = document.getElementById("main");
+  const nav = document.getElementById("nav");
+  const deleteBar = document.getElementById("deleteBar");
+
+  if(currentTab === "fav"){ renderFavorites(); nav.style.display="flex"; deleteBar.classList.remove("show"); return; }
+
+  nav.style.display = "flex";
+
+  if(bases.length===0){
+    main.innerHTML = `<div class="empty-state">
+      <div class="glyph">🗄️</div>
+      <h3>${t('emptyHomeTitle')}</h3>
+      <p>${t('emptyHomeText')}</p>
+    </div>`;
+    document.getElementById("deleteBar").classList.remove("show");
+    return;
+  }
+  renderHome();
+}
+
+function buildHomeHtml(globalListMode){
+  const byCat = {};
+  bases.forEach(b=>{ (byCat[b.category] = byCat[b.category]||[]).push(b); });
+  let html = "";
+  const catKeys = [...CATEGORY_ORDER, ...Object.keys(byCat).filter(k=>!CATEGORY_ORDER.includes(k))];
+  catKeys.forEach(catKey=>{
+    const list = byCat[catKey];
+    if(!list || list.length===0) return;
+    const first = list[0];
+    const catTitle = loc(first.categoryTitle) || CATEGORY_FALLBACK_TITLE[currentLang][catKey] || catKey;
+    const catIcon = first.icon || "";
+    const sizeClass = globalListMode ? "size-list" : "size-lg";
+    html += `<div class="category-block">
+      <div class="category-title">${catIcon?`<img class="icon-img" src="${catIcon}" alt="">`:""}${escapeHtml(catTitle)}</div>
+      <div class="grid ${sizeClass}">`;
+    list.forEach(b=>{
+      const isSel = selected.has(b.id);
+      html += `<div class="card ${isSel?'selected':''}" data-id="${b.id}">
+        ${b.icon?`<img class="icon-img" src="${b.icon}" alt="">`:""}
+        <div class="name">${escapeHtml(loc(b.name))}</div>
+        ${selectMode?`<div class="checkbox">✓</div>`:""}
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  return html;
+}
+
+function renderHome(){
+  const main = document.getElementById("main");
+
+  // Пробуем сначала крупные карточки, затем проверяем, помещаются ли они без скролла.
+  main.innerHTML = buildHomeHtml(false);
+  const fitsWithoutScroll = main.scrollHeight <= main.clientHeight + 4;
+  if(!fitsWithoutScroll){
+    main.innerHTML = buildHomeHtml(true);
+  }
+
+  attachCardHandlers();
+  updateDeleteBar();
+}
+
+function attachCardHandlers(){
+  document.querySelectorAll(".card").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const id = el.getAttribute("data-id");
+      if(selectMode){
+        if(selected.has(id)) selected.delete(id); else selected.add(id);
+        renderHome();
+      }else{
+        openBase(id);
+      }
+    });
+  });
+}
+
+function updateDeleteBar(){
+  const bar = document.getElementById("deleteBar");
+  const cnt = document.getElementById("deleteCount");
+  const trash = document.getElementById("btnTrash");
+  if(selectMode && bases.length>0){
+    bar.classList.add("show");
+    cnt.textContent = `${t('selected')}: ${selected.size}`;
+    trash.disabled = selected.size===0;
+  }else{
+    bar.classList.remove("show");
+  }
+}
+
+/* ---------- избранное (карточки, не базы — см. решение по чек-листу) ---------- */
+function renderFavorites(){
+  const main = document.getElementById("main");
+  const favs = [];
+  bases.forEach(b=> b.cards.forEach(c=>{ if(c.fav) favs.push({base:b, card:c}); }));
+  if(favs.length===0){
+    main.innerHTML = `<div class="empty-state">
+      <div class="glyph">❤</div>
+      <h3>${t('emptyFavTitle')}</h3>
+      <p>${t('emptyFavText')}</p>
+    </div>`;
+    return;
+  }
+  let html = `<div class="category-block"><div class="category-title">${t('favSectionTitle')}</div>`;
+  favs.forEach(({base,card})=>{
+    html += `<div class="entry" data-open-base="${base.id}" data-open-card="${card.id}">
+      ${base.icon?`<img class="icon-img" src="${base.icon}" alt="">`:""}
+      <div class="txt"><div class="t1">${escapeHtml(loc(card.title))}</div><div class="t2">${escapeHtml(loc(base.name))}</div></div>
+      <button class="star on" data-base="${base.id}" data-card="${card.id}">★</button>
+    </div>`;
+  });
+  html += `</div>`;
+  main.innerHTML = html;
+  document.querySelectorAll("#main .entry").forEach(el=>{
+    el.addEventListener("click", (e)=>{
+      if(e.target.closest(".star")) return;
+      openCardDetail(el.getAttribute("data-open-base"), el.getAttribute("data-open-card"));
+    });
+  });
+  document.querySelectorAll(".star").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const b = bases.find(x=>x.id===btn.getAttribute("data-base"));
+      const c = b.cards.find(x=>x.id===btn.getAttribute("data-card"));
+      c.fav = false;
+      await saveState();
+      renderFavorites();
+    });
+  });
+}
+
+/* ---------- экран базы ---------- */
+function openBase(id){
+  const b = bases.find(x=>x.id===id);
+  if(!b) return;
+  openBaseId = id;
+  document.getElementById("baseViewTitle").textContent = loc(b.name);
+  const list = document.getElementById("baseList");
+
+  if(b.category === "tests"){
+    const tests = b.tests || [];
+    if(tests.length===0){
+      list.innerHTML = `<div class="empty-state"><p>${t('noTestsYet')}</p></div>`;
+    }else{
+      list.innerHTML = tests.map(t=>`
+        <div class="test-entry" data-test="${t.id}">
+          <div><div class="t1">${escapeHtml(loc(t.title))}</div><div class="t2">${t('questionsCount', (t.questions||[]).length)}</div></div>
+          <div class="arrow">›</div>
+        </div>
+      `).join("");
+      document.querySelectorAll(".test-entry").forEach(el=>{
+        el.addEventListener("click", ()=> startTest(b, el.getAttribute("data-test")));
+      });
+    }
+  }else{
+    const cards = b.cards || [];
+    list.innerHTML = cards.map(c=>`
+      <div class="entry" data-card="${c.id}">
+        ${b.icon?`<img class="icon-img" src="${b.icon}" alt="">`:""}
+        <div class="txt"><div class="t1">${escapeHtml(loc(c.title))}</div></div>
+        <button class="star ${c.fav?'on':''}" data-card="${c.id}">${c.fav?'★':'☆'}</button>
+      </div>
+    `).join("");
+    document.querySelectorAll("#baseList .entry").forEach(el=>{
+      el.addEventListener("click", (e)=>{
+        if(e.target.closest(".star")) return;
+        openCardDetail(id, el.getAttribute("data-card"));
+      });
+    });
+    document.querySelectorAll("#baseList .star").forEach(btn=>{
+      btn.addEventListener("click", async (e)=>{
+        e.stopPropagation();
+        const c = b.cards.find(x=>x.id===btn.getAttribute("data-card"));
+        c.fav = !c.fav;
+        await saveState();
+        openBase(id);
+      });
+    });
+  }
+  document.getElementById("baseView").classList.add("show");
+}
+document.getElementById("btnBack").addEventListener("click", ()=>{
+  document.getElementById("baseView").classList.remove("show");
+  openBaseId = null;
+  render();
+});
+
+/* ---------- карточка-деталь: блоки содержимого ---------- */
+function renderBlock(block){
+  switch(block.type){
+    case "gallery":
+      return `<div class="block block-gallery">${(block.images||[]).map(src=>`<img src="${src}">`).join("")}</div>`;
+    case "text":
+      return `<div class="block block-text">${escapeHtml(loc(block.text)||"").replace(/\n/g,"<br>")}</div>`;
+    case "table":{
+      const headers = block.headers||[];
+      const rows = block.rows||[];
+      return `<div class="block block-table-wrap"><table class="block-table">
+        <thead><tr>${headers.map(h=>`<th>${escapeHtml(loc(h))}</th>`).join("")}</tr></thead>
+        <tbody>${rows.map(r=>`<tr>${r.map(cell=>`<td>${escapeHtml(loc(cell))}</td>`).join("")}</tr>`).join("")}</tbody>
+      </table></div>`;
+    }
+    case "phone":{
+      const num = loc(block.number)||"";
+      return `<a class="block block-action" href="tel:${encodeURIComponent(num)}">
+        <span class="ic">📞</span><div><div>${escapeHtml(loc(block.label)||t('call'))}</div><div class="sub">${escapeHtml(num)}</div></div>
+      </a>`;
+    }
+    case "address":{
+      const addr = loc(block.value)||"";
+      const mapsUrl = "https://maps.google.com/?q=" + encodeURIComponent(addr);
+      return `<a class="block block-action" href="${mapsUrl}" target="_blank" rel="noopener">
+        <span class="ic">📍</span><div><div>${escapeHtml(loc(block.label)||t('openMap'))}</div><div class="sub">${escapeHtml(addr)}</div></div>
+      </a>`;
+    }
+    default:
+      return "";
+  }
+}
+
+function openCardDetail(baseId, cardId){
+  const b = bases.find(x=>x.id===baseId);
+  if(!b) return;
+  const c = (b.cards||[]).find(x=>x.id===cardId);
+  if(!c) return;
+  document.getElementById("cardDetailTitle").textContent = loc(c.title);
+  const starBtn = document.getElementById("cardDetailStar");
+  starBtn.textContent = c.fav ? "★" : "☆";
+  starBtn.classList.toggle("on", !!c.fav);
+  starBtn.onclick = async ()=>{
+    c.fav = !c.fav;
+    await saveState();
+    openCardDetail(baseId, cardId);
+  };
+  const blocks = c.blocks && c.blocks.length ? c.blocks : [{type:"text", text:c.text||""}];
+  document.getElementById("cardDetailBody").innerHTML = blocks.map(renderBlock).join("");
+  document.getElementById("cardDetailView").classList.add("show");
+}
+document.getElementById("btnCardBack").addEventListener("click", ()=>{
+  document.getElementById("cardDetailView").classList.remove("show");
+});
+
+/* ---------- прохождение теста ---------- */
+let testState = null; // { base, test, qIndex, score, answered, selectedIndex }
+
+function startTest(base, testId){
+  const test = (base.tests||[]).find(t=>t.id===testId);
+  if(!test) return;
+  testState = { base, test, qIndex:0, score:0, answered:false, selectedIndex:null };
+  document.getElementById("testViewTitle").textContent = loc(test.title);
+  document.getElementById("testView").classList.add("show");
+  renderTestQuestion();
+}
+
+function renderTestQuestion(){
+  const { test, qIndex } = testState;
+  const questions = test.questions||[];
+  if(qIndex >= questions.length){ renderTestResult(); return; }
+  const q = questions[qIndex];
+  testState.answered = false;
+  testState.selectedIndex = null;
+
+  const optionsHtml = (q.options||[]).map((opt,i)=>
+    `<button class="test-option" data-i="${i}">${escapeHtml(loc(opt))}</button>`
+  ).join("");
+
+  document.getElementById("testBody").innerHTML = `
+    <div class="test-progress">${t('questionOf', qIndex+1, questions.length)}</div>
+    ${q.image?`<img class="test-question-img" src="${q.image}">`:""}
+    <div class="test-question-text">${escapeHtml(loc(q.text))}</div>
+    <div id="testOptions">${optionsHtml}</div>
+    <div id="testExplanation"></div>
+    <button class="test-next-btn" id="testNextBtn" disabled>${qIndex+1===questions.length?t('showResult'):t('next')}</button>
+  `;
+
+  document.querySelectorAll("#testOptions .test-option").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if(testState.answered) return;
+      const i = Number(btn.getAttribute("data-i"));
+      testState.answered = true;
+      testState.selectedIndex = i;
+      const correct = i === q.correctIndex;
+      if(correct) testState.score++;
+
+      document.querySelectorAll("#testOptions .test-option").forEach((b,bi)=>{
+        b.disabled = true;
+        if(bi===q.correctIndex) b.classList.add("correct");
+        else if(bi===i) b.classList.add("wrong");
+      });
+      if(q.explanation){
+        document.getElementById("testExplanation").innerHTML =
+          `<div class="test-explanation">${escapeHtml(loc(q.explanation))}</div>`;
+      }
+      document.getElementById("testNextBtn").disabled = false;
+    });
+  });
+
+  document.getElementById("testNextBtn").addEventListener("click", ()=>{
+    testState.qIndex++;
+    renderTestQuestion();
+  });
+}
+
+function renderTestResult(){
+  const { test, score } = testState;
+  const total = (test.questions||[]).length;
+  document.getElementById("testBody").innerHTML = `
+    <div class="test-result">
+      <div class="score">${score} / ${total}</div>
+      <div class="label">${t('correctAnswers')}</div>
+      <button class="test-result-btn" id="testRetryBtn">${t('retryTest')}</button>
+      <button class="test-result-btn" id="testBackToListBtn">${t('backToTests')}</button>
+    </div>
+  `;
+  document.getElementById("testRetryBtn").addEventListener("click", ()=>{
+    startTest(testState.base, testState.test.id);
+  });
+  document.getElementById("testBackToListBtn").addEventListener("click", ()=>{
+    document.getElementById("testView").classList.remove("show");
+    testState = null;
+  });
+}
+
+document.getElementById("btnTestBack").addEventListener("click", ()=>{
+  document.getElementById("testView").classList.remove("show");
+  testState = null;
+});
+
+/* ---------- верхняя панель ---------- */
+/* ---------- локализация статичной разметки ---------- */
+function applyStaticTranslations(){
+  document.title = t("pageTitle");
+  document.getElementById("btnSettings").title = t("tipSettings");
+  document.getElementById("btnAdd").title = t("tipAdd");
+  document.getElementById("btnSelect").title = t("tipSelect");
+  document.querySelector(".brand").textContent = t("brand");
+  document.getElementById("navHomeLabel").textContent = t("navHome");
+  document.getElementById("navFavLabel").textContent = t("navFav");
+  document.getElementById("btnTrash").innerHTML = `🗑 ${t("delete")}`;
+  document.getElementById("settingsTitleText").textContent = t("settingsTitle");
+  document.getElementById("langSectionTitle").textContent = t("langSectionTitle");
+  document.getElementById("licenseSectionTitle").textContent = t("licenseSectionTitle");
+  document.getElementById("licenseHintText").textContent = t("licenseHint");
+  document.getElementById("aboutSectionTitle").textContent = t("aboutSectionTitle");
+  document.getElementById("aboutShellLabel").textContent = t("aboutShell");
+  document.getElementById("aboutShellValue").textContent = t("aboutShellValue");
+  document.getElementById("aboutCountLabel").textContent = t("aboutCount");
+  document.querySelectorAll(".lang-btn").forEach(btn=>{
+    btn.classList.toggle("active", btn.getAttribute("data-lang")===currentLang);
+  });
+}
+document.querySelectorAll(".lang-btn").forEach(btn=>{
+  btn.addEventListener("click", async ()=>{
+    currentLang = btn.getAttribute("data-lang");
+    await storageSet("lang", currentLang);
+    applyStaticTranslations();
+    render();
+  });
+});
+
+/* ---------- настройки ---------- */
+document.getElementById("btnSettings").addEventListener("click", ()=>{
+  document.getElementById("settingsBaseCount").textContent = bases.length;
+  document.getElementById("settingsView").classList.add("show");
+});
+document.getElementById("btnSettingsBack").addEventListener("click", ()=>{
+  document.getElementById("settingsView").classList.remove("show");
+});
+document.getElementById("btnAdd").addEventListener("click", ()=>{
+  document.getElementById("fileInput").click();
+});
+document.getElementById("btnSelect").addEventListener("click", (e)=>{
+  selectMode = !selectMode;
+  selected.clear();
+  e.target.classList.toggle("active", selectMode);
+  render();
+});
+document.getElementById("fileInput").addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if(!data.name || !data.category){
+      showToast(t('toastBadFormat'));
+      return;
+    }
+    if(data.category === "tests" && !Array.isArray(data.tests)){
+      showToast(t('toastNeedTests'));
+      return;
+    }
+    if(data.category !== "tests" && !Array.isArray(data.cards)){
+      showToast(t('toastNeedCards'));
+      return;
+    }
+    data.id = data.id || ("base_"+Math.random().toString(36).slice(2,10));
+    bases.push(data);
+    await saveState();
+    render();
+    showToast(t('toastAdded', loc(data.name)));
+  }catch(err){
+    showToast(t('toastReadFail'));
+  }
+  e.target.value = "";
+});
+document.getElementById("btnTrash").addEventListener("click", async ()=>{
+  if(selected.size===0) return;
+  if(!confirm(t('confirmDelete', selected.size))) return;
+  bases = bases.filter(b=>!selected.has(b.id));
+  selected.clear();
+  selectMode = false;
+  document.getElementById("btnSelect").classList.remove("active");
+  await saveState();
+  render();
+});
+
+/* ---------- нижняя навигация ---------- */
+document.querySelectorAll(".nav-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    currentTab = btn.getAttribute("data-tab");
+    selectMode=false; selected.clear();
+    document.getElementById("btnSelect").classList.remove("active");
+    render();
+  });
+});
+
+/* ---------- утилиты ---------- */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+let toastTimer;
+function showToast(msg){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove("show"), 2200);
+}
+
+/* ---------- старт ---------- */
+loadState().then(()=>{
+  applyStaticTranslations();
+  render();
+});
+</script>
+</body>
+</html>
