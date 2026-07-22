@@ -838,9 +838,9 @@ function openBase(id){
     if(tests.length===0){
       list.innerHTML = `<div class="empty-state"><p>${t('noTestsYet')}</p></div>`;
     }else{
-      list.innerHTML = tests.map(t=>`
-        <div class="test-entry" data-test="${t.id}">
-          <div><div class="t1">${escapeHtml(loc(t.title))}</div><div class="t2">${t('questionsCount', (t.questions||[]).length)}</div></div>
+      list.innerHTML = tests.map(tst=>`
+        <div class="test-entry" data-test="${tst.id}">
+          <div><div class="t1">${escapeHtml(loc(tst.title))}</div><div class="t2">${t('questionsCount', (tst.questions||[]).length)}</div></div>
           <div class="arrow">›</div>
         </div>
       `).join("");
