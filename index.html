@@ -478,6 +478,7 @@
   <header>
     <div class="brand">Оболочка</div>
     <div class="icon-group">
+      <span id="versionLabel" style="font-size:18px;font-weight:700;color:var(--text-main);align-self:center;margin-right:6px;">v1</span>
       <button class="icon-btn" id="btnSettings" title="Настройки">⚙</button>
       <button class="icon-btn" id="btnAdd" title="Добавить базу">＋</button>
       <button class="icon-btn" id="btnSelect" title="Выбрать базы для удаления">☑</button>
@@ -560,9 +561,9 @@
 /* ---------- локализация оболочки: 3 языка, по умолчанию английский ---------- */
 const STRINGS = {
   en: {
-    pageTitle:"Shell — prototype",
+    pageTitle:"Base — prototype",
     tipSettings:"Settings", tipAdd:"Add database", tipSelect:"Select databases to delete",
-    brand:"Shell",
+    brand:"Base",
     navHome:"Home", navFav:"Favorites",
     emptyHomeTitle:"No databases yet", emptyHomeText:"Tap “+” above to add your first database.",
     emptyFavTitle:"No favorites yet", emptyFavText:"Mark cards with a star inside a database — they'll show up here.",
@@ -572,7 +573,7 @@ const STRINGS = {
     langSectionTitle:"Interface language",
     licenseSectionTitle:"License management",
     licenseHint:"Will be available once the sales website launches — that's also where you'll link purchased databases to this device.",
-    aboutSectionTitle:"About", aboutShell:"Shell", aboutShellValue:"working prototype", aboutCount:"Connected databases",
+    aboutSectionTitle:"About", aboutShell:"Base", aboutShellValue:"working prototype", aboutCount:"Connected databases",
     noTestsYet:"This database has no tests yet.",
     questionsCount:(n)=>`${n} question${n===1?'':'s'}`,
     questionOf:(i,n)=>`Question ${i} of ${n}`,
@@ -589,9 +590,9 @@ const STRINGS = {
     confirmDelete:(n)=>`Delete the selected databases (${n})? This can't be undone.`,
   },
   ru: {
-    pageTitle:"Оболочка — прототип",
+    pageTitle:"База — прототип",
     tipSettings:"Настройки", tipAdd:"Добавить базу", tipSelect:"Выбрать базы для удаления",
-    brand:"Оболочка",
+    brand:"База",
     navHome:"Главная", navFav:"Избранное",
     emptyHomeTitle:"Баз данных нет", emptyHomeText:"Нажмите «＋» вверху, чтобы добавить первую базу.",
     emptyFavTitle:"Пока нет избранного", emptyFavText:"Отмечайте карточки звёздочкой внутри баз — они появятся здесь.",
@@ -601,7 +602,7 @@ const STRINGS = {
     langSectionTitle:"Язык интерфейса",
     licenseSectionTitle:"Управление лицензиями",
     licenseHint:"Появится после запуска сайта продажи баз данных — там же можно будет привязать купленные базы к этому устройству.",
-    aboutSectionTitle:"О приложении", aboutShell:"Оболочка", aboutShellValue:"рабочий прототип", aboutCount:"Подключено баз",
+    aboutSectionTitle:"О приложении", aboutShell:"База", aboutShellValue:"рабочий прототип", aboutCount:"Подключено баз",
     noTestsYet:"В этой базе пока нет тестов.",
     questionsCount:(n)=>`${n} вопрос${n%10===1&&n%100!==11?'':(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'а':'ов')}`,
     questionOf:(i,n)=>`Вопрос ${i} из ${n}`,
@@ -618,9 +619,9 @@ const STRINGS = {
     confirmDelete:(n)=>`Удалить выбранные базы (${n})? Действие необратимо.`,
   },
   es: {
-    pageTitle:"Aplicación — prototipo",
+    pageTitle:"Base — prototipo",
     tipSettings:"Ajustes", tipAdd:"Añadir base de datos", tipSelect:"Seleccionar bases para eliminar",
-    brand:"Aplicación",
+    brand:"Base",
     navHome:"Inicio", navFav:"Favoritos",
     emptyHomeTitle:"Aún no hay bases de datos", emptyHomeText:"Toca «＋» arriba para añadir tu primera base de datos.",
     emptyFavTitle:"Aún no hay favoritos", emptyFavText:"Marca las tarjetas con una estrella dentro de una base — aparecerán aquí.",
@@ -630,7 +631,7 @@ const STRINGS = {
     langSectionTitle:"Idioma de la interfaz",
     licenseSectionTitle:"Gestión de licencias",
     licenseHint:"Estará disponible cuando se lance el sitio de ventas — allí también podrás vincular las bases compradas a este dispositivo.",
-    aboutSectionTitle:"Acerca de", aboutShell:"Aplicación", aboutShellValue:"prototipo funcional", aboutCount:"Bases conectadas",
+    aboutSectionTitle:"Acerca de", aboutShell:"Base", aboutShellValue:"prototipo funcional", aboutCount:"Bases conectadas",
     noTestsYet:"Esta base todavía no tiene tests.",
     questionsCount:(n)=>`${n} pregunta${n===1?'':'s'}`,
     questionOf:(i,n)=>`Pregunta ${i} de ${n}`,
