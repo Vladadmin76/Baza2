@@ -273,6 +273,24 @@
   }
   #cardDetailView.show, #testView.show{display:flex;}
 
+  #imageViewer{
+    position:fixed;inset:0;
+    background:rgba(10,12,14,0.96);
+    display:none;
+    align-items:center;justify-content:center;
+    z-index:60;
+  }
+  #imageViewer.show{display:flex;}
+  #imageViewer img{
+    max-width:94%; max-height:88%;
+    object-fit:contain;
+    border-radius:8px;
+  }
+  #imageViewer .back-btn{
+    position:absolute; top:18px; right:18px;
+    z-index:61;
+  }
+
   /* блоки содержимого карточки */
   .block{margin-bottom:18px;}
   .block-gallery{
@@ -282,10 +300,12 @@
   }
   .block-gallery img{
     scroll-snap-align:start;
-    width:80%; max-width:320px; flex-shrink:0;
-    border-radius:var(--radius); object-fit:cover;
+    width:auto; max-width:230px; height:260px;
+    flex-shrink:0;
+    border-radius:var(--radius); object-fit:contain;
+    background:var(--surface);
     border:1px solid var(--border);
-    aspect-ratio:4/3;
+    cursor:zoom-in;
   }
   .block-text{font-size:14.5px;line-height:1.6;color:var(--text-main);}
   .block-table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-sm);}
@@ -525,6 +545,11 @@
     <div class="base-list" id="testBody"></div>
   </div>
 
+  <div id="imageViewer">
+    <button class="back-btn" id="btnImageViewerClose">✕</button>
+    <img id="imageViewerImg" src="">
+  </div>
+
   <input type="file" id="fileInput" accept="application/json">
   <div class="toast" id="toast"></div>
 </div>
@@ -632,17 +657,19 @@ function loc(field){
 }
 
 /* ---------- справочник категорий (10 шт., см. Том 3 / Картинки.pdf) ---------- */
-const CATEGORY_ORDER = ["recipes","places","documents","tools","dictionary","tests","routes","gallery","contacts","checklists"];
+// Категории теперь пронумерованы (1–30). 1–11 — уже используемые темы,
+// 12–30 — зарезервированные пустые номера под будущие базы (решение от 22.07).
+const CATEGORY_ORDER = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30];
 const CATEGORY_FALLBACK_TITLE = {
-  en: { recipes:"Recipes", places:"Nature / places", documents:"Documents", tools:"Tools",
-        dictionary:"Dictionary", tests:"Tests / quizzes", routes:"Routes", gallery:"Gallery",
-        contacts:"Contacts", checklists:"Checklists" },
-  ru: { recipes:"Рецепты", places:"Природа / места", documents:"Документы", tools:"Инструменты",
-        dictionary:"Словарь", tests:"Тесты / викторины", routes:"Маршруты", gallery:"Галерея",
-        contacts:"Контакты", checklists:"Чек-листы" },
-  es: { recipes:"Recetas", places:"Naturaleza / lugares", documents:"Documentos", tools:"Herramientas",
-        dictionary:"Diccionario", tests:"Tests / cuestionarios", routes:"Rutas", gallery:"Galería",
-        contacts:"Contactos", checklists:"Listas de verificación" },
+  en: { 1:"Recipes", 2:"Nature / places", 3:"Documents", 4:"Tools",
+        5:"Dictionary", 6:"Tests / quizzes", 7:"Routes", 8:"Gallery",
+        9:"Contacts", 10:"Checklists", 11:"Alcoholic Drink Recipes" },
+  ru: { 1:"Рецепты", 2:"Природа / места", 3:"Документы", 4:"Инструменты",
+        5:"Словарь", 6:"Тесты / викторины", 7:"Маршруты", 8:"Галерея",
+        9:"Контакты", 10:"Чек-листы", 11:"Рецепты алкогольных напитков" },
+  es: { 1:"Recetas", 2:"Naturaleza / lugares", 3:"Documentos", 4:"Herramientas",
+        5:"Diccionario", 6:"Tests / cuestionarios", 7:"Rutas", 8:"Galería",
+        9:"Contactos", 10:"Listas de verificación", 11:"Recetas de bebidas alcohólicas" },
 };
 // Иконка и название категории теперь хранятся ВНУТРИ каждой базы (base.icon, base.categoryTitle)
 // и физически копируются в файл базы при её создании — оболочка ничего не хранит заранее
@@ -833,7 +860,7 @@ function openBase(id){
   document.getElementById("baseViewTitle").textContent = loc(b.name);
   const list = document.getElementById("baseList");
 
-  if(b.category === "tests"){
+  if(Array.isArray(b.tests)){
     const tests = b.tests || [];
     if(tests.length===0){
       list.innerHTML = `<div class="empty-state"><p>${t('noTestsYet')}</p></div>`;
@@ -885,7 +912,7 @@ document.getElementById("btnBack").addEventListener("click", ()=>{
 function renderBlock(block){
   switch(block.type){
     case "gallery":
-      return `<div class="block block-gallery">${(block.images||[]).map(src=>`<img src="${src}">`).join("")}</div>`;
+      return `<div class="block block-gallery">${(block.images||[]).map(src=>`<img src="${src}" class="viewable-img">`).join("")}</div>`;
     case "text":
       return `<div class="block block-text">${escapeHtml(loc(block.text)||"").replace(/\n/g,"<br>")}</div>`;
     case "table":{
@@ -962,7 +989,7 @@ function renderTestQuestion(){
 
   document.getElementById("testBody").innerHTML = `
     <div class="test-progress">${t('questionOf', qIndex+1, questions.length)}</div>
-    ${q.image?`<img class="test-question-img" src="${q.image}">`:""}
+    ${q.image?`<img class="test-question-img viewable-img" src="${q.image}">`:""}
     <div class="test-question-text">${escapeHtml(loc(q.text))}</div>
     <div id="testOptions">${optionsHtml}</div>
     <div id="testExplanation"></div>
@@ -1077,15 +1104,11 @@ document.getElementById("fileInput").addEventListener("change", async (e)=>{
   try{
     const text = await file.text();
     const data = JSON.parse(text);
-    if(!data.name || !data.category){
+    if(!data.name || data.category==null){
       showToast(t('toastBadFormat'));
       return;
     }
-    if(data.category === "tests" && !Array.isArray(data.tests)){
-      showToast(t('toastNeedTests'));
-      return;
-    }
-    if(data.category !== "tests" && !Array.isArray(data.cards)){
+    if(!Array.isArray(data.tests) && !Array.isArray(data.cards)){
       showToast(t('toastNeedCards'));
       return;
     }
@@ -1134,6 +1157,20 @@ function showToast(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>el.classList.remove("show"), 2200);
 }
+
+/* ---------- полноэкранный просмотр фото ---------- */
+document.addEventListener("click", (e)=>{
+  const img = e.target.closest(".viewable-img");
+  if(!img) return;
+  document.getElementById("imageViewerImg").src = img.src;
+  document.getElementById("imageViewer").classList.add("show");
+});
+document.getElementById("btnImageViewerClose").addEventListener("click", ()=>{
+  document.getElementById("imageViewer").classList.remove("show");
+});
+document.getElementById("imageViewer").addEventListener("click", (e)=>{
+  if(e.target.id === "imageViewer") document.getElementById("imageViewer").classList.remove("show");
+});
 
 /* ---------- старт ---------- */
 loadState().then(()=>{
