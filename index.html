@@ -478,7 +478,7 @@
   <header>
     <div class="brand">Оболочка</div>
     <div class="icon-group">
-      <span id="versionLabel" style="font-size:18px;font-weight:700;color:var(--text-main);align-self:center;margin-right:6px;">v1</span>
+      <span id="versionLabel" style="font-size:18px;font-weight:700;color:var(--text-main);align-self:center;margin-right:6px;">v2</span>
       <button class="icon-btn" id="btnSettings" title="Настройки">⚙</button>
       <button class="icon-btn" id="btnAdd" title="Добавить базу">＋</button>
       <button class="icon-btn" id="btnSelect" title="Выбрать базы для удаления">☑</button>
@@ -1217,8 +1217,8 @@ document.addEventListener("click", (e)=>{
 document.getElementById("btnImageViewerClose").addEventListener("click", ()=>{
   document.getElementById("imageViewer").classList.remove("show");
 });
-document.getElementById("imageViewer").addEventListener("click", (e)=>{
-  if(e.target.id === "imageViewer") document.getElementById("imageViewer").classList.remove("show");
+document.getElementById("imageViewer").addEventListener("click", ()=>{
+  document.getElementById("imageViewer").classList.remove("show");
 });
 
 /* ---------- старт ---------- */
