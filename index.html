@@ -285,7 +285,9 @@
     max-width:94%; max-height:88%;
     object-fit:contain;
     border-radius:8px;
+    touch-action:manipulation;
   }
+  .viewable-img{ touch-action:manipulation; }
   #imageViewer .back-btn{
     position:absolute; top:18px; right:18px;
     z-index:61;
@@ -583,6 +585,7 @@ const STRINGS = {
     toastNeedCards:"This database must contain a list of cards",
     toastAdded:(name)=>`Database "${name}" added`,
     toastReadFail:"Couldn't read the database file",
+    toastSaveFail:"Couldn't save data on this device (storage full or restricted)",
     confirmDelete:(n)=>`Delete the selected databases (${n})? This can't be undone.`,
   },
   ru: {
@@ -611,6 +614,7 @@ const STRINGS = {
     toastNeedCards:"В базе должен быть список карточек",
     toastAdded:(name)=>`База «${name}» добавлена`,
     toastReadFail:"Не удалось прочитать файл базы",
+    toastSaveFail:"Не удалось сохранить данные на устройстве (нет места или доступ ограничен)",
     confirmDelete:(n)=>`Удалить выбранные базы (${n})? Действие необратимо.`,
   },
   es: {
@@ -639,6 +643,7 @@ const STRINGS = {
     toastNeedCards:"Esta base debe contener una lista de tarjetas",
     toastAdded:(name)=>`Base «${name}» añadida`,
     toastReadFail:"No se pudo leer el archivo de la base",
+    toastSaveFail:"No se pudieron guardar los datos en este dispositivo (sin espacio o acceso restringido)",
     confirmDelete:(n)=>`¿Eliminar las bases seleccionadas (${n})? Esta acción no se puede deshacer.`,
   },
 };
@@ -693,18 +698,56 @@ let openBaseId = null;
    localStorage (когда файл открыт как обычная страница на устройстве) ---------- */
 const hasClaudeStorage = (typeof window.storage !== "undefined" && window.storage !== null);
 
+/* ---------- запасное хранилище: IndexedDB (используется, когда файл
+   открыт как обычный сайт вне Claude — лимит на порядки больше, чем у
+   localStorage, что важно для баз с встроенными картинками) ---------- */
+let _idbPromise = null;
+function openIDB(){
+  if(_idbPromise) return _idbPromise;
+  _idbPromise = new Promise((resolve, reject)=>{
+    const req = indexedDB.open("shell-storage", 1);
+    req.onupgradeneeded = ()=>{ req.result.createObjectStore("kv"); };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+  return _idbPromise;
+}
+async function idbGet(key){
+  const db = await openIDB();
+  return new Promise((resolve)=>{
+    const tx = db.transaction("kv","readonly");
+    const req = tx.objectStore("kv").get(key);
+    req.onsuccess = ()=> resolve(req.result!==undefined ? req.result : null);
+    req.onerror = ()=> resolve(null);
+  });
+}
+async function idbSet(key, value){
+  const db = await openIDB();
+  return new Promise((resolve)=>{
+    const tx = db.transaction("kv","readwrite");
+    tx.objectStore("kv").put(value, key);
+    tx.oncomplete = ()=> resolve(true);
+    tx.onerror = ()=> resolve(false);
+  });
+}
+
 async function storageGet(key){
   if(hasClaudeStorage){
     try{ const r = await window.storage.get(key, false); return r ? r.value : null; }
     catch(e){ return null; }
   }
-  return localStorage.getItem(key);
+  try{ return await idbGet(key); }catch(e){ return null; }
 }
 async function storageSet(key, value){
   if(hasClaudeStorage){
     try{ await window.storage.set(key, value, false); return; }catch(e){}
   }
-  try{ localStorage.setItem(key, value); }catch(e){}
+  try{
+    const ok = await idbSet(key, value);
+    if(!ok) showToast(t('toastSaveFail'));
+  }catch(e){
+    showToast(t('toastSaveFail'));
+  }
 }
 
 async function loadState(){
@@ -815,7 +858,7 @@ function updateDeleteBar(){
 function renderFavorites(){
   const main = document.getElementById("main");
   const favs = [];
-  bases.forEach(b=> b.cards.forEach(c=>{ if(c.fav) favs.push({base:b, card:c}); }));
+  bases.forEach(b=> (b.cards||[]).forEach(c=>{ if(c.fav) favs.push({base:b, card:c}); }));
   if(favs.length===0){
     main.innerHTML = `<div class="empty-state">
       <div class="glyph">❤</div>
