@@ -746,7 +746,7 @@ function buildHomeHtml(globalListMode){
   const byCat = {};
   bases.forEach(b=>{ (byCat[b.category] = byCat[b.category]||[]).push(b); });
   let html = "";
-  const catKeys = [...CATEGORY_ORDER, ...Object.keys(byCat).filter(k=>!CATEGORY_ORDER.includes(k))];
+  const catKeys = [...CATEGORY_ORDER, ...Object.keys(byCat).filter(k=>!CATEGORY_ORDER.map(String).includes(k))];
   catKeys.forEach(catKey=>{
     const list = byCat[catKey];
     if(!list || list.length===0) return;
@@ -1113,7 +1113,12 @@ document.getElementById("fileInput").addEventListener("change", async (e)=>{
       return;
     }
     data.id = data.id || ("base_"+Math.random().toString(36).slice(2,10));
-    bases.push(data);
+    const existingIndex = bases.findIndex(b=>b.id===data.id);
+    if(existingIndex >= 0){
+      bases[existingIndex] = data;
+    }else{
+      bases.push(data);
+    }
     await saveState();
     render();
     showToast(t('toastAdded', loc(data.name)));
